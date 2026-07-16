@@ -15,44 +15,57 @@
       <p class="eyebrow">Electronic Medical Records</p>
       <h1>Hospital Management System</h1>
     </div>
-    <div id="authState" class="auth-state">Not signed in</div>
+    <div id="userBadge" class="user-badge hidden">
+      <span id="authState" class="auth-state">–</span>
+      <button id="logoutBtn" class="btn-signout">Sign out</button>
+    </div>
   </header>
 
-  <main class="layout">
-    <section class="panel auth-panel">
-      <h2>Authentication</h2>
-      <form id="signupForm" class="form-grid">
-        <h3>Sign Up</h3>
-        <input id="signupName" placeholder="Full name" required />
-        <input id="signupEmail" type="email" placeholder="Email" required />
-        <input id="signupPassword" type="password" placeholder="Password" required />
-        <select id="signupRole" required>
-          <option value="PATIENT">PATIENT</option>
-          <option value="DOCTOR">DOCTOR</option>
-          <option value="STAFF">STAFF</option>
-          <option value="NURSE">NURSE</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
-        <button type="submit">Create account</button>
-      </form>
+  <!-- Auth screen (shown when logged out) -->
+  <div id="authScreen" class="auth-screen">
+    <div class="auth-card panel">
+      <div class="auth-logo">🏥</div>
+      <p class="auth-title">Hospital Management System</p>
+      <p class="auth-subtitle">Electronic Medical Records Portal</p>
+
+      <div class="auth-toggle">
+        <button type="button" id="showLoginBtn" class="auth-tab active">Sign In</button>
+        <button type="button" id="showSignupBtn" class="auth-tab">New Account</button>
+      </div>
 
       <form id="loginForm" class="form-grid">
-        <h3>Sign In</h3>
-        <input id="loginEmail" type="email" placeholder="Email" required />
-        <input id="loginPassword" type="password" placeholder="Password" required />
-        <button type="submit">Sign in</button>
+        <label for="loginEmail">Email address</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com" required autocomplete="email" />
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" placeholder="Enter your password" required autocomplete="current-password" />
+        <div id="loginError" class="error-msg hidden"></div>
+        <button type="submit" id="loginBtn">Sign in</button>
+        <p class="form-hint">Don't have an account? <a href="#" id="switchToSignup">Create one →</a></p>
       </form>
 
-      <button id="logoutBtn" class="danger">Sign out</button>
-    </section>
+      <form id="signupForm" class="form-grid hidden">
+        <label for="signupName">Full name</label>
+        <input id="signupName" placeholder="e.g. Jane Smith" required autocomplete="name" />
+        <label for="signupEmail">Email address</label>
+        <input id="signupEmail" type="email" placeholder="you@example.com" required autocomplete="email" />
+        <label for="signupPassword">Password</label>
+        <input id="signupPassword" type="password" placeholder="At least 6 characters" required autocomplete="new-password" minlength="6" />
+        <div id="signupError" class="error-msg hidden"></div>
+        <button type="submit" id="signupBtn">Create account</button>
+        <p class="form-hint">Already have an account? <a href="#" id="switchToLogin">Sign in →</a></p>
+      </form>
+    </div>
+  </div>
 
+  <!-- Main app (hidden until logged in) -->
+  <main class="layout hidden" id="appLayout">
     <section class="panel module-panel">
       <nav class="tabs" id="tabs"></nav>
       <div id="moduleContent"></div>
     </section>
   </main>
 
-  <section class="panel logs-panel">
+  <section class="panel logs-panel hidden" id="logsPanel">
     <h2>Activity Log</h2>
     <pre id="logs"></pre>
   </section>
