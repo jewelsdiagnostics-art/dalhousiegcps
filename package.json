@@ -1,0 +1,12 @@
+{
+  "name": "hospital-ms-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seed:sql": "node tools/sql-to-firestore.mjs",
+    "serve": "npx serve ."
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  }
+}

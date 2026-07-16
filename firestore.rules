@@ -1,0 +1,139 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    function hasUserDoc() {
+      return isSignedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function userRole() {
+      return hasUserDoc() ? userDoc().role : null;
+    }
+    function isAdmin() {
+      return userRole() == "ADMIN";
+    }
+    function isMedicalStaff() {
+      return userRole() in ["ADMIN", "DOCTOR", "STAFF", "NURSE"];
+    }
+    function isClinicalStaff() {
+      return userRole() in ["ADMIN", "DOCTOR", "NURSE"];
+    }
+    function canAccessPatientRecord(patientUid) {
+      return isAdmin() || isMedicalStaff() || isOwner(patientUid);
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId)
+        && request.resource.data.uid == userId
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.role == "PATIENT"
+        && request.resource.data.user_status == "ACTIVE"
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "fullName",
+          "email",
+          "role",
+          "user_status",
+          "createdAt",
+          "updatedAt",
+          "contact",
+          "address",
+          "avatarUrl"
+        ]);
+      allow update: if isOwner(userId)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.user_status == resource.data.user_status
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.keys().hasOnly([
+          "uid",
+          "fullName",
+          "email",
+          "role",
+          "user_status",
+          "createdAt",
+          "updatedAt",
+          "contact",
+          "address",
+          "avatarUrl"
+        ]);
+    }
+
+    match /appointments/{docId} {
+      allow read: if canAccessPatientRecord(resource.data.patientUid);
+      allow create: if isSignedIn()
+        && (
+          isAdmin() ||
+          isMedicalStaff() ||
+          (userRole() == "PATIENT" && request.resource.data.patientUid == request.auth.uid)
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin() ||
+          isMedicalStaff() ||
+          (userRole() == "PATIENT" && resource.data.patientUid == request.auth.uid)
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /patients/{docId} {
+      allow read, create, update, delete: if isClinicalStaff();
+    }
+
+    match /lab_tests/{docId} {
+      allow read: if canAccessPatientRecord(resource.data.patientUid);
+      allow create: if isSignedIn()
+        && (
+          isAdmin() ||
+          isMedicalStaff() ||
+          (userRole() == "PATIENT" && request.resource.data.patientUid == request.auth.uid)
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin() ||
+          isMedicalStaff() ||
+          (userRole() == "PATIENT" && resource.data.patientUid == request.auth.uid)
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /prescriptions/{docId} {
+      allow read: if canAccessPatientRecord(resource.data.patientUid);
+      allow create: if isSignedIn()
+        && (
+          isAdmin() ||
+          isClinicalStaff() ||
+          (userRole() == "PATIENT" && request.resource.data.patientUid == request.auth.uid)
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin() ||
+          isClinicalStaff() ||
+          (userRole() == "PATIENT" && resource.data.patientUid == request.auth.uid)
+        );
+      allow delete: if isAdmin();
+    }
+
+    match /payments/{docId} {
+      allow read: if canAccessPatientRecord(resource.data.patientUid);
+      allow create: if isSignedIn()
+        && (
+          isAdmin() ||
+          isMedicalStaff() ||
+          (userRole() == "PATIENT" && request.resource.data.patientUid == request.auth.uid)
+        );
+      allow update: if isSignedIn()
+        && (
+          isAdmin() ||
+          isMedicalStaff() ||
+          (userRole() == "PATIENT" && resource.data.patientUid == request.auth.uid)
+        );
+      allow delete: if isAdmin();
+    }
+  }
+}
